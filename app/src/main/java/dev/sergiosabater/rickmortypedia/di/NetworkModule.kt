@@ -4,9 +4,9 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import dev.sergiosabater.rickmortypedia.data.remote.api.BASE_URL
-import dev.sergiosabater.rickmortypedia.data.remote.api.CONNECTION_TIMEOUT
-import dev.sergiosabater.rickmortypedia.data.remote.api.RickAndMortyApiService
+import dev.sergiosabater.rickmortypedia.data.datasource.remote.api.BASE_URL
+import dev.sergiosabater.rickmortypedia.data.datasource.remote.api.CONNECTION_TIMEOUT
+import dev.sergiosabater.rickmortypedia.data.datasource.remote.api.RickAndMortyApiService
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit

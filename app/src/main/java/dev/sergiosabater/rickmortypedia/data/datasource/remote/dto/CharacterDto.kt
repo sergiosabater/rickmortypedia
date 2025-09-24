@@ -1,4 +1,4 @@
-package dev.sergiosabater.rickmortypedia.data.remote.dto
+package dev.sergiosabater.rickmortypedia.data.datasource.remote.dto
 
 import com.google.gson.annotations.SerializedName
 

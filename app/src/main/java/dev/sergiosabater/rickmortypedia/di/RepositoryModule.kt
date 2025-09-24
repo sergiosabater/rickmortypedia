@@ -4,7 +4,6 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import dev.sergiosabater.rickmortypedia.data.mapper.CharacterMapper
 import dev.sergiosabater.rickmortypedia.data.repository.CharacterRepository
 import dev.sergiosabater.rickmortypedia.data.repository.CharacterRepositoryImpl
 import javax.inject.Singleton
@@ -18,10 +17,5 @@ abstract class RepositoryModule {
     abstract fun bindCharacterRepository(
         characterRepositoryImpl: CharacterRepositoryImpl
     ): CharacterRepository
-
-    @Singleton
-    fun provideCharacterMapper(): CharacterMapper {
-        return CharacterMapper
-    }
 
 }

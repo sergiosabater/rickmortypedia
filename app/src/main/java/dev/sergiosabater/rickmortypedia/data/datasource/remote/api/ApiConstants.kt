@@ -1,4 +1,4 @@
-package dev.sergiosabater.rickmortypedia.data.remote.api
+package dev.sergiosabater.rickmortypedia.data.datasource.remote.api
 
 // URL
 const val BASE_URL = "https://rickandmortyapi.com/api/"

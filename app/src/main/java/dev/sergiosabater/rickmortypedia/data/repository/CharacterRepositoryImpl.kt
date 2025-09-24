@@ -1,20 +1,28 @@
 package dev.sergiosabater.rickmortypedia.data.repository
 
-import dev.sergiosabater.rickmortypedia.data.mapper.CharacterMapper
-import dev.sergiosabater.rickmortypedia.data.remote.api.RickAndMortyApiService
+import dev.sergiosabater.rickmortypedia.data.datasource.local.dao.CharacterDao
+import dev.sergiosabater.rickmortypedia.data.datasource.local.dao.PaginationInfoDao
+import dev.sergiosabater.rickmortypedia.data.datasource.local.mapper.CharacterEntityMapper
+import dev.sergiosabater.rickmortypedia.data.datasource.remote.api.RickAndMortyApiService
+import dev.sergiosabater.rickmortypedia.data.datasource.remote.mapper.CharacterMapper
 import dev.sergiosabater.rickmortypedia.domain.error.DomainError
 import dev.sergiosabater.rickmortypedia.domain.model.Character
 import javax.inject.Inject
 
 class CharacterRepositoryImpl @Inject constructor(
     private val apiService: RickAndMortyApiService,
-    private val mapper: CharacterMapper
+    private val mapper: CharacterMapper,
+    private val characterDao: CharacterDao,
+    private val paginationInfoDao: PaginationInfoDao,
+    private val entityMapper: CharacterEntityMapper
 ) : CharacterRepository {
 
     override suspend fun getCharacters(page: Int?): Result<List<Character>> {
         return safeApiCall {
             val response = apiService.getCharacters(page = page)
-            val characters = response.results.map { dto -> mapper.toCharacter(dto) }
+            val characters = response.results.map { dto ->
+                mapper.toCharacter(dto)
+            }
 
             if (characters.isEmpty()) {
                 throw DomainError.NoCharactersFound
@@ -42,7 +50,9 @@ class CharacterRepositoryImpl @Inject constructor(
                 status = status,
                 species = species
             )
-            val characters = response.results.map { dto -> mapper.toCharacter(dto) }
+            val characters = response.results.map { dto ->
+                mapper.toCharacter(dto)
+            }
 
             if (characters.isEmpty()) {
                 throw DomainError.NoCharactersFound

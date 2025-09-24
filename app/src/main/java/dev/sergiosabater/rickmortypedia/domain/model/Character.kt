@@ -10,8 +10,14 @@ data class Character(
     val origin: String,
     val location: String,
     val image: String,
-    val episodeCount: Int
+    val episodeCount: Int,
+    val originUrl: String = "",
+    val locationUrl: String = "",
+    val episodeUrls: List<String> = emptyList(),
+    val url: String = "",
+    val created: String = ""
 )
+
 
 enum class CharacterStatus {
     ALIVE, DEAD, UNKNOWN;

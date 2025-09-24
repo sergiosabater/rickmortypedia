@@ -1,7 +1,7 @@
-package dev.sergiosabater.rickmortypedia.data.remote.api
+package dev.sergiosabater.rickmortypedia.data.datasource.remote.api
 
-import dev.sergiosabater.rickmortypedia.data.remote.dto.CharacterDto
-import dev.sergiosabater.rickmortypedia.data.remote.dto.CharactersResponseDto
+import dev.sergiosabater.rickmortypedia.data.datasource.remote.dto.CharacterDto
+import dev.sergiosabater.rickmortypedia.data.datasource.remote.dto.CharactersResponseDto
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
