@@ -58,6 +58,8 @@ dependencies {
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     implementation(libs.lifecycle.viewmodel.ktx)
+    implementation(libs.okhttp)
+    implementation(libs.okhttp.logging.interceptor)
     kapt(libs.hilt.android.compiler)
     kapt(libs.room.compiler)
     testImplementation(libs.junit)
