@@ -7,7 +7,7 @@ import javax.inject.Inject
 class GetCharacterByIdUseCase @Inject constructor(
     private val repository: CharacterRepository
 ) {
-    suspend operator fun invoke(id: Int): Character {
+    suspend operator fun invoke(id: Int): Result<Character> {
         return repository.getCharacterById(id)
     }
 }
