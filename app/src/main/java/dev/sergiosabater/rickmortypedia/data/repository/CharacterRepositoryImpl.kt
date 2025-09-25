@@ -21,23 +21,49 @@ class CharacterRepositoryImpl @Inject constructor(
 
     override suspend fun getCharacters(page: Int?): Result<List<Character>> {
         return try {
-            // 1. First check if data in the cache
-            if (hasCachedData()) {
-                // 2. Get data from the local database
-                val localCharacters = getCharactersFromLocal(page)
-                if (localCharacters.isNotEmpty()) {
-                    Result.success(localCharacters)
+            if (page != null) {
+                // Load specific page
+                if (hasCachedData()) {
+                    val localCharacters = getCharactersFromLocal(page)
+                    if (localCharacters.isNotEmpty()) {
+                        Result.success(localCharacters)
+                    } else {
+                        Result.failure(DomainError.NoCachedData)
+                    }
                 } else {
-                    Result.failure(DomainError.NoCachedData)
+                    syncWithApi(page)
+                    val refreshedCharacters = getCharactersFromLocal(page)
+                    if (refreshedCharacters.isNotEmpty()) {
+                        Result.success(refreshedCharacters)
+                    } else {
+                        Result.failure(DomainError.NoCharactersFound)
+                    }
                 }
             } else {
-                // 3. If no cache, synchronize with API
-                syncWithApi(page ?: 1)
+                // Load all pages
+                if (hasCachedData()) {
+                    val localCharacters = getCharactersFromLocal(null)
+                    if (localCharacters.isNotEmpty()) {
+                        return Result.success(localCharacters)
+                    }
+                }
 
-                // 4. Get data after synchronization
-                val refreshedCharacters = getCharactersFromLocal(page)
-                if (refreshedCharacters.isNotEmpty()) {
-                    Result.success(refreshedCharacters)
+                // Synchronize all pages
+                var totalPages = paginationInfoDao.getPaginationInfo()?.totalPages
+                if (totalPages == null) {
+                    // Synchronize first page to get totalPages
+                    syncWithApi(1)
+                    totalPages = paginationInfoDao.getPaginationInfo()?.totalPages ?: 1
+                }
+
+                for (currentPage in 1..totalPages) {
+                    syncWithApi(currentPage)
+                }
+
+                // Get all characters from cache
+                val allCharacters = getCharactersFromLocal(null)
+                if (allCharacters.isNotEmpty()) {
+                    Result.success(allCharacters)
                 } else {
                     Result.failure(DomainError.NoCharactersFound)
                 }
@@ -74,8 +100,7 @@ class CharacterRepositoryImpl @Inject constructor(
                 } else {
                     val exception = apiResult.exceptionOrNull()
                     Result.failure(
-                        exception as? DomainError ?: DomainError.UnknownError(exception?.message)
-                    )
+                        exception as? DomainError ?: DomainError.UnknownError)
                 }
             }
         } catch (e: Exception) {
@@ -160,7 +185,7 @@ class CharacterRepositoryImpl @Inject constructor(
         } catch (e: java.io.IOException) {
             Result.failure(DomainError.NetworkError)
         } catch (e: Exception) {
-            Result.failure(DomainError.UnknownError(e.message))
+            Result.failure(DomainError.UnknownError)
         }
     }
 
@@ -173,7 +198,6 @@ class CharacterRepositoryImpl @Inject constructor(
             val entities = if (page != null) {
                 characterDao.getCharactersByPage(page)
             } else {
-                // Get all characters
                 characterDao.getCharacters(Int.MAX_VALUE, 0)
             }
             entities.map { entityMapper.toDomain(it) }
