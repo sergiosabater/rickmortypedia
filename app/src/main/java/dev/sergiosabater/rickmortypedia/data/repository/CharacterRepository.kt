@@ -10,4 +10,7 @@ interface CharacterRepository {
         status: String? = null,
         species: String? = null
     ): Result<List<Character>>
+
+    suspend fun hasCachedData(): Boolean
+    suspend fun clearCache(): Result<Boolean>
 }

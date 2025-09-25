@@ -1,10 +1,14 @@
 package dev.sergiosabater.rickmortypedia.domain.error
 
 sealed class DomainError(message: String) : Exception(message) {
-    object NetworkError : DomainError("Error de conexión. Verifica tu internet.")
-    object ServerError : DomainError("Error del servidor. Inténtalo más tarde.")
-    data class CharacterNotFound(val id: Int) : DomainError("Personaje con ID $id no encontrado.")
-    object NoCharactersFound : DomainError("No se encontraron personajes con esos criterios.")
+    object NetworkError : DomainError("Connection error. Check your internet.")
+    object ServerError : DomainError("Server error. Please try again later.")
+    data class CharacterNotFound(val id: Int) : DomainError("Character with ID $id not found")
+    object NoCharactersFound : DomainError("No characters were found with those criteria")
     data class UnknownError(val originalMessage: String?) :
-        DomainError("Error inesperado: $originalMessage")
+        DomainError("Unexpected error: $originalMessage")
+
+    object NoCachedData : DomainError("No data is stored locally")
+    object SyncFailed : DomainError("Error synchronizing with the server")
+    object DatabaseError : DomainError("Local database error")
 }
