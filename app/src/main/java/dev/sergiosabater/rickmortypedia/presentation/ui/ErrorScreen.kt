@@ -2,15 +2,20 @@ package dev.sergiosabater.rickmortypedia.presentation.ui
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,14 +34,25 @@ fun ErrorScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF1A1A1A)),
+            .background(Color.White),
         contentAlignment = Alignment.Center
     ) {
+
+        Icon(
+            imageVector = Icons.Filled.Close,
+            contentDescription = "Close App",
+            tint = Color.Black,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 32.dp, end = 16.dp)
+                .size(48.dp)
+                .clickable { onExit() }
+        )
+
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(32.dp)
         ) {
-            // Imagen de Rick llorando
             Image(
                 painter = painterResource(R.drawable.error),
                 contentDescription = "Error",
@@ -45,27 +61,20 @@ fun ErrorScreen(
 
             Text(
                 text = "Oops! Something went wrong",
-                color = Color.White,
+                color = Color.Black,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold
             )
 
-            Column(
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+            Button(
+                onClick = onRetry,
+                modifier = Modifier.width(200.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF00FF80),
+                    contentColor = Color.Black
+                )
             ) {
-                Button(
-                    onClick = onRetry,
-                    modifier = Modifier.width(200.dp)
-                ) {
-                    Text("Try Again", color = Color.Black, fontWeight = FontWeight.Bold)
-                }
-
-                TextButton(
-                    onClick = onExit,
-                    modifier = Modifier.width(200.dp)
-                ) {
-                    Text("Exit App", color = Color.Red)
-                }
+                Text("Try Again", fontWeight = FontWeight.Bold)
             }
         }
     }
