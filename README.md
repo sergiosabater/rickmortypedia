@@ -33,7 +33,7 @@
 ## 📸 Screenshots
 
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/6e5ab912-a127-4c16-8761-8c66bfc38b72" width="250" alt="Home Screen"> &nbsp;&nbsp;
+  <img src="https://github.com/user-attachments/assets/3cbb46b0-fb67-45e0-94c1-1b709c8719af" width="250" alt="Main Screen"> &nbsp;&nbsp;
   <img src="https://github.com/user-attachments/assets/af63d6fe-2315-4b65-94e4-020a9e8d9749" width="250" alt="Character Detail"> &nbsp;&nbsp;
   <img src="https://github.com/user-attachments/assets/7713d817-7634-4820-8a0b-ec3a99797179" width="250" alt="Error Screen">
 </div>
