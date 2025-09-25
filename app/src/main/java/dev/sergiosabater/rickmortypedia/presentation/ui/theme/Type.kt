@@ -1,4 +1,4 @@
-package dev.sergiosabater.rickmortypedia.ui.theme
+package dev.sergiosabater.rickmortypedia.presentation.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
