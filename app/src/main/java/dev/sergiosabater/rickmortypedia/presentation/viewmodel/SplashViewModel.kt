@@ -49,11 +49,6 @@ class SplashViewModel @Inject constructor(
             }
         }
     }
-
-    fun retryLoading() {
-        _uiState.value = SplashUiState.Loading
-        loadInitialData()
-    }
 }
 
 sealed class SplashUiState {
