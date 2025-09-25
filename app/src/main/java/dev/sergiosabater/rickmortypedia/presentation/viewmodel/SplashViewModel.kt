@@ -25,25 +25,34 @@ class SplashViewModel @Inject constructor(
 
     private fun loadInitialData() {
         viewModelScope.launch {
+
             val result = getCharactersUseCase()
-            result.fold(
-                onSuccess = { characters ->
+
+            when {
+                result.isSuccess -> {
+                    val characters = result.getOrNull() ?: emptyList()
                     if (characters.isNotEmpty()) {
                         _uiState.value = SplashUiState.Success
                     } else {
                         _uiState.value = SplashUiState.Error("No characters were found")
                     }
-                },
-                onFailure = { exception ->
+                }
+                else -> {
+                    val exception = result.exceptionOrNull()
                     val errorMessage = if (exception is DomainError) {
                         exception.message
                     } else {
-                        exception.message ?: DomainError.UnknownError.message
+                        exception?.message ?: "Unknown error occurred"
                     }
                     _uiState.value = SplashUiState.Error(errorMessage)
                 }
-            )
+            }
         }
+    }
+
+    fun retryLoading() {
+        _uiState.value = SplashUiState.Loading
+        loadInitialData()
     }
 }
 

@@ -60,6 +60,7 @@ dependencies {
     implementation(libs.lifecycle.viewmodel.ktx)
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging.interceptor)
+    implementation(libs.coil.compose)
     kapt(libs.hilt.android.compiler)
     kapt(libs.room.compiler)
     testImplementation(libs.junit)

@@ -1,5 +1,6 @@
 package dev.sergiosabater.rickmortypedia.data.repository
 
+import android.util.Log
 import dev.sergiosabater.rickmortypedia.data.datasource.local.dao.CharacterDao
 import dev.sergiosabater.rickmortypedia.data.datasource.local.dao.PaginationInfoDao
 import dev.sergiosabater.rickmortypedia.data.datasource.local.entity.PaginationInfoEntity
@@ -56,8 +57,19 @@ class CharacterRepositoryImpl @Inject constructor(
                     totalPages = paginationInfoDao.getPaginationInfo()?.totalPages ?: 1
                 }
 
+                var successCount = 0
                 for (currentPage in 1..totalPages) {
-                    syncWithApi(currentPage)
+                    try {
+                        syncWithApi(currentPage)
+                        successCount++
+                    } catch (e: Exception) {
+                        Log.e("Repository", "Error syncing page $currentPage: ${e.message}")
+                        // Continue with next pages
+                    }
+                }
+
+                if (successCount == 0) {
+                    return Result.failure(DomainError.SyncFailed)
                 }
 
                 // Get all characters from cache
