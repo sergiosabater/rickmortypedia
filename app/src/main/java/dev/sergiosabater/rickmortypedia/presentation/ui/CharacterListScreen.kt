@@ -260,7 +260,7 @@ fun PreviewCharactersListScreen() {
             episodeCount = 51
         ),
 
-    )
+        )
 
     RickMortyPediaTheme {
         CharactersListScreen(
