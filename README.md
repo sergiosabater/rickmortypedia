@@ -9,6 +9,7 @@
 
 <div align="center">
 
+
 ### 🌌 ¡Bienvenido al Universo de Rick y Morty! 🌌
 *La enciclopedia definitiva de todos los personajes de la serie más interdimensional de la galaxia*
 
@@ -33,9 +34,9 @@
 ## 📸 Screenshots
 
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/3cbb46b0-fb67-45e0-94c1-1b709c8719af" width="250" alt="Main Screen"> &nbsp;&nbsp;
-  <img src="https://github.com/user-attachments/assets/af63d6fe-2315-4b65-94e4-020a9e8d9749" width="250" alt="Character Detail"> &nbsp;&nbsp;
-  <img src="https://github.com/user-attachments/assets/7713d817-7634-4820-8a0b-ec3a99797179" width="250" alt="Error Screen">
+  <img src="https://github.com/user-attachments/assets/bb21bdd8-bb2e-4c51-b8e5-18ca36ea3e5a" width="250" alt="Main Screen"> &nbsp;&nbsp;
+  <img src="https://github.com/user-attachments/assets/20f6475f-1154-4a5a-bcfb-1efd7606cd58" width="250" alt="Character Detail"> &nbsp;&nbsp;
+  <img src="https://github.com/user-attachments/assets/7b0a629a-df6c-4156-b407-f743aa5c9640" width="250" alt="Character Detail"> &nbsp;&nbsp;
 </div>
 
 ---
