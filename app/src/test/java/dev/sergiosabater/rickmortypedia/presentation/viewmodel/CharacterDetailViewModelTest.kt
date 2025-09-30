@@ -1,9 +1,13 @@
 package dev.sergiosabater.rickmortypedia.presentation.viewmodel
 
+import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import dev.sergiosabater.rickmortypedia.domain.model.Character
 import dev.sergiosabater.rickmortypedia.domain.usecase.GetCharacterByIdUseCase
+import io.mockk.clearAllMocks
 import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -21,6 +25,7 @@ import org.junit.Test
 class CharacterDetailViewModelTest {
 
     private val getCharacterByIdUseCase = mockk<GetCharacterByIdUseCase>()
+    private val savedStateHandle = mockk<SavedStateHandle>(relaxed = true)
     private lateinit var viewModel: CharacterDetailViewModel
 
     private val testDispatcher = StandardTestDispatcher()
@@ -28,12 +33,18 @@ class CharacterDetailViewModelTest {
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
-        viewModel = CharacterDetailViewModel(getCharacterByIdUseCase)
+
+        every { savedStateHandle.get<Int>("characterId") } returns 1
+
+        coEvery {
+            getCharacterByIdUseCase.invoke(any())
+        } returns Result.success(mockk(relaxed = true))
     }
 
     @After
     fun tearDown() {
         Dispatchers.resetMain()
+        clearAllMocks()
     }
 
     @Test
@@ -41,20 +52,26 @@ class CharacterDetailViewModelTest {
         // Given
         val characterId = 1
         val mockCharacter = mockk<Character>()
-        coEvery { getCharacterByIdUseCase(characterId) } returns Result.success(mockCharacter)
+
+        coEvery {
+            getCharacterByIdUseCase.invoke(characterId)
+        } returns Result.success(mockCharacter)
+
+        viewModel = CharacterDetailViewModel(savedStateHandle, getCharacterByIdUseCase)
+
+        testScheduler.advanceUntilIdle()
 
         // When & Then
         viewModel.uiState.test {
 
-            assertEquals(CharacterDetailUiState.Loading, awaitItem())
+            val currentState = awaitItem()
+            assertTrue(currentState is CharacterDetailUiState.Success)
+            assertEquals(mockCharacter, (currentState as CharacterDetailUiState.Success).character)
 
-            viewModel.loadCharacter(characterId)
-            testScheduler.advanceUntilIdle()
-
-            val successState = awaitItem()
-            assertTrue(successState is CharacterDetailUiState.Success)
-            assertEquals(mockCharacter, (successState as CharacterDetailUiState.Success).character)
+            cancelAndIgnoreRemainingEvents()
         }
+
+        coVerify { getCharacterByIdUseCase.invoke(characterId) }
     }
 
     @Test
@@ -63,19 +80,25 @@ class CharacterDetailViewModelTest {
             // Given
             val characterId = 1
             val exception = RuntimeException("Network error")
-            coEvery { getCharacterByIdUseCase(characterId) } returns Result.failure(exception)
+
+            coEvery {
+                getCharacterByIdUseCase.invoke(characterId)
+            } returns Result.failure(exception)
+
+            viewModel = CharacterDetailViewModel(savedStateHandle, getCharacterByIdUseCase)
+
+            testScheduler.advanceUntilIdle()
 
             // When & Then
             viewModel.uiState.test {
-                assertEquals(CharacterDetailUiState.Loading, awaitItem())
-
-                viewModel.loadCharacter(characterId)
-                testScheduler.advanceUntilIdle()
-
                 val errorState = awaitItem()
                 assertTrue(errorState is CharacterDetailUiState.Error)
                 assertEquals("Network error", (errorState as CharacterDetailUiState.Error).message)
+
+                cancelAndIgnoreRemainingEvents()
             }
+
+            coVerify { getCharacterByIdUseCase.invoke(characterId) }
         }
 
     @Test
@@ -84,29 +107,66 @@ class CharacterDetailViewModelTest {
             // Given
             val characterId = 1
             val exception = RuntimeException()
-            coEvery { getCharacterByIdUseCase(characterId) } returns Result.failure(exception)
+
+            coEvery {
+                getCharacterByIdUseCase.invoke(characterId)
+            } returns Result.failure(exception)
+
+            viewModel = CharacterDetailViewModel(savedStateHandle, getCharacterByIdUseCase)
+            testScheduler.advanceUntilIdle()
 
             // When & Then
             viewModel.uiState.test {
-                assertEquals(CharacterDetailUiState.Loading, awaitItem())
-
-                viewModel.loadCharacter(characterId)
-                testScheduler.advanceUntilIdle()
-
                 val errorState = awaitItem()
                 assertTrue(errorState is CharacterDetailUiState.Error)
                 assertEquals(
                     "Error desconocido",
                     (errorState as CharacterDetailUiState.Error).message
                 )
+
+                cancelAndIgnoreRemainingEvents()
             }
+
+            coVerify { getCharacterByIdUseCase.invoke(characterId) }
         }
 
     @Test
-    fun `initial state should be Loading`() = runTest {
-        // Then
-        viewModel.uiState.test {
-            assertEquals(CharacterDetailUiState.Loading, awaitItem())
+    fun `when calling loadCharacter manually after init, should emit Loading then Success`() =
+        runTest {
+            // Given
+            val characterId = 2
+            val mockCharacter = mockk<Character>()
+
+            coEvery {
+                getCharacterByIdUseCase.invoke(1)
+            } returns Result.success(mockk(relaxed = true))
+
+            coEvery {
+                getCharacterByIdUseCase.invoke(characterId)
+            } returns Result.success(mockCharacter)
+
+            viewModel = CharacterDetailViewModel(savedStateHandle, getCharacterByIdUseCase)
+            testScheduler.advanceUntilIdle()
+
+            // When & Then
+            viewModel.uiState.test {
+
+                skipItems(1)
+                viewModel.loadCharacter(characterId)
+                assertEquals(CharacterDetailUiState.Loading, awaitItem())
+                testScheduler.advanceUntilIdle()
+
+                val successState = awaitItem()
+                assertTrue(successState is CharacterDetailUiState.Success)
+                assertEquals(
+                    mockCharacter,
+                    (successState as CharacterDetailUiState.Success).character
+                )
+
+                cancelAndIgnoreRemainingEvents()
+            }
+
+            coVerify(exactly = 1) { getCharacterByIdUseCase.invoke(1) }
+            coVerify(exactly = 1) { getCharacterByIdUseCase.invoke(characterId) }
         }
-    }
 }
