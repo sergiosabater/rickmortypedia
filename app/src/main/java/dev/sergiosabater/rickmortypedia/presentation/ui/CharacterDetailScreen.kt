@@ -1,10 +1,13 @@
 package dev.sergiosabater.rickmortypedia.presentation.ui
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -46,6 +49,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -80,6 +84,12 @@ fun CharacterDetailScreen(
     onRetry: () -> Unit
 ) {
 
+    var contentVisible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        contentVisible = true
+    }
+
     Scaffold(
         topBar = {
             CharacterDetailTopBar(
@@ -92,35 +102,45 @@ fun CharacterDetailScreen(
             )
         }
     ) { paddingValues ->
-        when (uiState) {
-            is CharacterDetailUiState.Loading -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(
-                        color = MaterialTheme.colorScheme.primary
+
+        AnimatedVisibility(
+            visible = contentVisible,
+            enter = slideInHorizontally(
+                animationSpec = tween(durationMillis = 400, easing = FastOutSlowInEasing)
+            ) + fadeIn(
+                animationSpec = tween(durationMillis = 400)
+            )
+        ) {
+            when (uiState) {
+                is CharacterDetailUiState.Loading -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(paddingValues),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+
+                is CharacterDetailUiState.Error -> {
+                    ErrorDetailState(
+                        errorMessage = uiState.message,
+                        onRetry = onRetry,
+                        onBackClick = onBackClick,
+                        modifier = Modifier.padding(paddingValues)
                     )
                 }
-            }
 
-            is CharacterDetailUiState.Error -> {
-                ErrorDetailState(
-                    errorMessage = uiState.message,
-                    onRetry = onRetry,
-                    onBackClick = onBackClick,
-                    modifier = Modifier.padding(paddingValues)
-                )
-            }
-
-            is CharacterDetailUiState.Success -> {
-                val character = uiState.character
-                CharacterDetailContent(
-                    character = character,
-                    modifier = Modifier.padding(paddingValues)
-                )
+                is CharacterDetailUiState.Success -> {
+                    val character = uiState.character
+                    CharacterDetailContent(
+                        character = character,
+                        modifier = Modifier.padding(paddingValues)
+                    )
+                }
             }
         }
     }
