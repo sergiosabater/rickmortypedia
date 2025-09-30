@@ -13,6 +13,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import dev.sergiosabater.rickmortypedia.presentation.viewmodel.CharactersListViewModel
+import dev.sergiosabater.rickmortypedia.presentation.viewmodel.ThemeViewModel
 
 sealed class Screen(val route: String) {
     object Splash : Screen("splash")
@@ -22,7 +23,7 @@ sealed class Screen(val route: String) {
 }
 
 @Composable
-fun AppNavigation() {
+fun AppNavigation(themeViewModel: ThemeViewModel) {
     val navController = rememberNavController()
 
     NavHost(
@@ -61,7 +62,8 @@ fun AppNavigation() {
                 searchQuery = searchQuery,
                 onSearchQueryChange = viewModel::onSearchQueryChange,
                 onCharacterClick = viewModel::onCharacterClick,
-                uiState = uiState
+                uiState = uiState,
+                themeViewModel = themeViewModel
             )
         }
 
