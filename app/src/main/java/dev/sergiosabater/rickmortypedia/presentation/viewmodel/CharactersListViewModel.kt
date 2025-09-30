@@ -6,6 +6,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.sergiosabater.rickmortypedia.domain.model.Character
 import dev.sergiosabater.rickmortypedia.domain.usecase.GetCharactersUseCase
 import dev.sergiosabater.rickmortypedia.domain.usecase.SearchCharactersUseCase
+import dev.sergiosabater.rickmortypedia.presentation.ui.component.SpeciesFilter
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -37,6 +38,9 @@ class CharactersListViewModel @Inject constructor(
 
     private val _navigationEvent = MutableSharedFlow<Int>()
     val navigationEvent: SharedFlow<Int> = _navigationEvent.asSharedFlow()
+
+    private val _selectedSpecies = MutableStateFlow(SpeciesFilter.ALL)
+    val selectedSpecies: StateFlow<SpeciesFilter> = _selectedSpecies.asStateFlow()
 
     //For debounce
     private var searchJob: Job? = null
@@ -74,16 +78,33 @@ class CharactersListViewModel @Inject constructor(
     }
 
     private suspend fun performSearch(query: String) {
-        if (query.isEmpty()) {
+        val currentSpeciesFilter = _selectedSpecies.value
+
+        if (query.isEmpty() && currentSpeciesFilter == SpeciesFilter.ALL) {
+            // Show all
             _filteredCharacters.value = _characters.value
         } else {
-            val result = searchCharactersUseCase(name = query)
-            if (result.isSuccess) {
-                _filteredCharacters.value = result.getOrNull() ?: emptyList()
-            } else {
-                _filteredCharacters.value = _characters.value.filter { character ->
-                    character.name.contains(query, ignoreCase = true)
+            // Filter by name
+            val searchResults = if (query.isNotEmpty()) {
+                val result = searchCharactersUseCase(name = query)
+                if (result.isSuccess) {
+                    result.getOrNull() ?: emptyList()
+                } else {
+                    _characters.value.filter { character ->
+                        character.name.contains(query, ignoreCase = true)
+                    }
                 }
+            } else {
+                _characters.value
+            }
+
+            // Apply filter by species
+            _filteredCharacters.value = if (currentSpeciesFilter != SpeciesFilter.ALL) {
+                searchResults.filter { character ->
+                    character.species.equals(currentSpeciesFilter.filterValue, ignoreCase = true)
+                }
+            } else {
+                searchResults
             }
         }
     }
@@ -97,6 +118,14 @@ class CharactersListViewModel @Inject constructor(
     private fun setupSearchListener() {
         viewModelScope.launch {
             performSearch("")
+        }
+    }
+
+    fun onSpeciesFilterChange(species: SpeciesFilter) {
+        _selectedSpecies.value = species
+        searchJob?.cancel()
+        searchJob = viewModelScope.launch {
+            performSearch(_searchQuery.value)
         }
     }
 }

@@ -1,6 +1,15 @@
 package dev.sergiosabater.rickmortypedia.presentation.ui
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,13 +21,16 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Place
@@ -26,82 +38,109 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import dev.sergiosabater.rickmortypedia.domain.model.Character
 import dev.sergiosabater.rickmortypedia.domain.model.CharacterStatus
+import dev.sergiosabater.rickmortypedia.presentation.ui.theme.RickAndMortyFontFamily
+import dev.sergiosabater.rickmortypedia.presentation.ui.theme.RickMortyPediaTheme
+import dev.sergiosabater.rickmortypedia.presentation.ui.theme.StatusAlive
+import dev.sergiosabater.rickmortypedia.presentation.ui.theme.StatusDead
+import dev.sergiosabater.rickmortypedia.presentation.ui.theme.StatusUnknown
 import dev.sergiosabater.rickmortypedia.presentation.viewmodel.CharacterDetailUiState
-import dev.sergiosabater.rickmortypedia.presentation.viewmodel.CharacterDetailViewModel
 
 @Composable
 fun CharacterDetailScreen(
-    characterId: Int,
-    viewModel: CharacterDetailViewModel = hiltViewModel(),
-    onBackClick: () -> Unit
+    uiState: CharacterDetailUiState,
+    onBackClick: () -> Unit,
+    onRetry: () -> Unit
 ) {
-    val uiState by viewModel.uiState.collectAsState()
 
-    LaunchedEffect(characterId) {
-        viewModel.loadCharacter(characterId)
+    var contentVisible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        contentVisible = true
     }
 
     Scaffold(
         topBar = {
-            CharacterDetailTopBar(onBackClick = onBackClick)
+            CharacterDetailTopBar(
+                characterName = if (uiState is CharacterDetailUiState.Success) {
+                    uiState.character.name
+                } else {
+                    "Character Details"
+                },
+                onBackClick = onBackClick
+            )
         }
     ) { paddingValues ->
-        when (uiState) {
-            is CharacterDetailUiState.Loading -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(color = Color(0xFF00FF00))
+
+        AnimatedVisibility(
+            visible = contentVisible,
+            enter = slideInHorizontally(
+                animationSpec = tween(durationMillis = 400, easing = FastOutSlowInEasing)
+            ) + fadeIn(
+                animationSpec = tween(durationMillis = 400)
+            )
+        ) {
+            when (uiState) {
+                is CharacterDetailUiState.Loading -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(paddingValues),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 }
-            }
 
-            is CharacterDetailUiState.Error -> {
-                ErrorDetailState(
-                    errorMessage = (uiState as CharacterDetailUiState.Error).message,
-                    onRetry = { viewModel.loadCharacter(characterId) },
-                    onBackClick = onBackClick,
-                    modifier = Modifier.padding(paddingValues)
-                )
-            }
+                is CharacterDetailUiState.Error -> {
+                    ErrorDetailState(
+                        errorMessage = uiState.message,
+                        onRetry = onRetry,
+                        onBackClick = onBackClick,
+                        modifier = Modifier.padding(paddingValues)
+                    )
+                }
 
-            is CharacterDetailUiState.Success -> {
-                val character = (uiState as CharacterDetailUiState.Success).character
-                CharacterDetailContent(
-                    character = character,
-                    modifier = Modifier.padding(paddingValues)
-                )
+                is CharacterDetailUiState.Success -> {
+                    val character = uiState.character
+                    CharacterDetailContent(
+                        character = character,
+                        modifier = Modifier.padding(paddingValues)
+                    )
+                }
             }
         }
     }
@@ -109,26 +148,34 @@ fun CharacterDetailScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CharacterDetailTopBar(onBackClick: () -> Unit) {
-    TopAppBar(
+fun CharacterDetailTopBar(
+    characterName: String,
+    onBackClick: () -> Unit
+) {
+    CenterAlignedTopAppBar(
         title = {
             Text(
-                text = "Character Details",
-                color = Color.White
+                text = characterName,
+                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold
+                ),
+                fontFamily = RickAndMortyFontFamily
             )
         },
         navigationIcon = {
             IconButton(onClick = onBackClick) {
                 Icon(
-                    imageVector = Icons.Default.ArrowBack,
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back",
-                    tint = Color.White
+                    tint = MaterialTheme.colorScheme.onSurface
                 )
             }
         },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = Color(0xFF1A1A1A),
-            titleContentColor = Color.White
+        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+            containerColor = MaterialTheme.colorScheme.background,
+            titleContentColor = MaterialTheme.colorScheme.onSurface
         )
     )
 }
@@ -144,7 +191,7 @@ fun CharacterDetailContent(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(scrollState)
-            .background(Color(0xFF1A1A1A)),
+            .background(MaterialTheme.colorScheme.background),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         CharacterDetailHeader(character = character)
@@ -160,6 +207,7 @@ fun CharacterDetailHeader(character: Character) {
         modifier = Modifier
             .fillMaxWidth()
             .height(300.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
@@ -167,86 +215,90 @@ fun CharacterDetailHeader(character: Character) {
                 .crossfade(true)
                 .build(),
             contentDescription = "Imagen de ${character.name}",
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
-        )
-
-        // Overlay gradiente
-        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            Color.Transparent,
-                            Color.Black.copy(alpha = 0.6f)
-                        ),
-                        startY = 0f,
-                        endY = 300f
-                    )
-                )
-        )
-
-        Text(
-            text = character.name,
-            color = Color.White,
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(16.dp)
+                .clip(RoundedCornerShape(12.dp)),
+            contentScale = ContentScale.Crop
         )
     }
 }
 
 @Composable
 fun CharacterInfoSection(character: Character) {
+    var isExpanded by remember { mutableStateOf(false) }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clickable { isExpanded = !isExpanded },
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            modifier = Modifier.padding(16.dp)
         ) {
-            Text(
-                text = "Character Info",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF1A1A1A)
-            )
-
-            InfoRow(
-                label = "State",
-                value = character.status.name,
-                icon = Icons.Default.Favorite,
-                statusColor = when (character.status) {
-                    CharacterStatus.ALIVE -> Color.Green
-                    CharacterStatus.DEAD -> Color.Red
-                    CharacterStatus.UNKNOWN -> Color.Gray
-                }
-            )
-
-            InfoRow(
-                label = "Specie",
-                value = character.species.ifEmpty { "Desconocida" },
-                icon = Icons.Default.Person
-            )
-
-            InfoRow(
-                label = "Gender",
-                value = character.gender.ifEmpty { "Desconocido" },
-                icon = Icons.Default.Face
-            )
-
-            if (character.type.isNotEmpty()) {
-                InfoRow(
-                    label = "Type",
-                    value = character.type,
-                    icon = Icons.Default.Info
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Character Info",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
+
+                Icon(
+                    imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                    contentDescription = if (isExpanded) "Collapse" else "Expand",
+                    tint = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
+            AnimatedVisibility(
+                visible = isExpanded,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
+                Column(
+                    modifier = Modifier.padding(top = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    InfoRow(
+                        label = "State",
+                        value = character.status.name,
+                        icon = Icons.Default.Favorite,
+                        statusColor = when (character.status) {
+                            CharacterStatus.ALIVE -> StatusAlive
+                            CharacterStatus.DEAD -> StatusDead
+                            CharacterStatus.UNKNOWN -> StatusUnknown
+                        }
+                    )
+
+                    InfoRow(
+                        label = "Specie",
+                        value = character.species.ifEmpty { "Unknown" },
+                        icon = Icons.Default.Person
+                    )
+
+                    InfoRow(
+                        label = "Gender",
+                        value = character.gender.ifEmpty { "Unknown" },
+                        icon = Icons.Default.Face
+                    )
+
+                    if (character.type.isNotEmpty()) {
+                        InfoRow(
+                            label = "Type",
+                            value = character.type,
+                            icon = Icons.Default.Info
+                        )
+                    }
+                }
             }
         }
     }
@@ -254,67 +306,121 @@ fun CharacterInfoSection(character: Character) {
 
 @Composable
 fun CharacterLocationsSection(character: Character) {
+    var isExpanded by remember { mutableStateOf(false) }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clickable { isExpanded = !isExpanded },
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            modifier = Modifier.padding(16.dp)
         ) {
-            Text(
-                text = "Locations",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF1A1A1A)
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Locations",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
 
-            InfoRow(
-                label = "Origin",
-                value = character.origin.ifEmpty { "Desconocido" },
-                icon = Icons.Default.Place
-            )
+                Icon(
+                    imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                    contentDescription = if (isExpanded) "Collapse" else "Expand",
+                    tint = MaterialTheme.colorScheme.onSurface
+                )
+            }
 
-            InfoRow(
-                label = "Current location",
-                value = character.location.ifEmpty { "Desconocida" },
-                icon = Icons.Default.LocationOn
-            )
+            AnimatedVisibility(
+                visible = isExpanded,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
+                Column(
+                    modifier = Modifier.padding(top = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    InfoRow(
+                        label = "Origin",
+                        value = character.origin.ifEmpty { "Unknown" },
+                        icon = Icons.Default.Place
+                    )
+
+                    InfoRow(
+                        label = "Current location",
+                        value = character.location.ifEmpty { "Unknown" },
+                        icon = Icons.Default.LocationOn
+                    )
+                }
+            }
         }
     }
 }
 
 @Composable
 fun CharacterEpisodesSection(character: Character) {
+    var isExpanded by remember { mutableStateOf(false) }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clickable { isExpanded = !isExpanded },
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            modifier = Modifier.padding(16.dp)
         ) {
-            Text(
-                text = "Episodes",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF1A1A1A)
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Episodes",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
 
-            Text(
-                text = "Appears in ${character.episodeCount} episodes",
-                fontSize = 16.sp,
-                color = Color.Gray
-            )
+                Icon(
+                    imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                    contentDescription = if (isExpanded) "Collapse" else "Expand",
+                    tint = MaterialTheme.colorScheme.onSurface
+                )
+            }
 
+            AnimatedVisibility(
+                visible = isExpanded,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
+                Column(
+                    modifier = Modifier.padding(top = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = "Appears in ${character.episodeCount} episodes",
+                        fontSize = 16.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
         }
     }
 }
-
 
 @Composable
 fun InfoRow(
@@ -331,7 +437,7 @@ fun InfoRow(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = statusColor ?: Color(0xFF00FF00),
+            tint = statusColor ?: MaterialTheme.colorScheme.primary,
             modifier = Modifier.size(20.dp)
         )
 
@@ -341,13 +447,13 @@ fun InfoRow(
             Text(
                 text = label,
                 fontSize = 14.sp,
-                color = Color.Gray,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontWeight = FontWeight.Medium
             )
             Text(
                 text = value,
                 fontSize = 16.sp,
-                color = Color.Black,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Normal
             )
         }
@@ -362,14 +468,16 @@ fun ErrorDetailState(
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Icon(
             imageVector = Icons.Default.Close,
             contentDescription = "Error",
-            tint = Color.Red,
+            tint = MaterialTheme.colorScheme.error,
             modifier = Modifier.size(64.dp)
         )
 
@@ -379,13 +487,13 @@ fun ErrorDetailState(
             text = "Error al cargar el personaje",
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.Black
+            color = MaterialTheme.colorScheme.onSurface
         )
 
         Text(
             text = errorMessage,
             fontSize = 14.sp,
-            color = Color.Gray,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(horizontal = 32.dp, vertical = 8.dp)
         )
@@ -397,15 +505,48 @@ fun ErrorDetailState(
         ) {
             Button(
                 onClick = onRetry,
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00FF00))
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
             ) {
-                Text("Retry", color = Color.Black)
+                Text(
+                    "Retry",
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
             }
 
             TextButton(onClick = onBackClick) {
-                Text("Back")
+                Text(
+                    "Back",
+                    color = MaterialTheme.colorScheme.primary
+                )
             }
         }
     }
 }
 
+@Preview
+@Composable
+fun PreviewCharacterDetailScreen() {
+
+    val sampleCharacter = Character(
+        id = 1,
+        name = "Rick Sanchez",
+        status = CharacterStatus.ALIVE,
+        species = "Human",
+        type = "Genius",
+        gender = "Male",
+        origin = "Earth (C-137)",
+        location = "Citadel of Ricks",
+        image = "https://rickandmortyapi.com/api/character/avatar/1.jpeg",
+        episodeCount = 51
+    )
+
+    RickMortyPediaTheme {
+        CharacterDetailScreen(
+            uiState = CharacterDetailUiState.Success(character = sampleCharacter),
+            onBackClick = {},
+            onRetry = {}
+        )
+    }
+}
