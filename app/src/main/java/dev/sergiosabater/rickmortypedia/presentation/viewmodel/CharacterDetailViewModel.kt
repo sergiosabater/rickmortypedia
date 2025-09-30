@@ -1,5 +1,6 @@
 package dev.sergiosabater.rickmortypedia.presentation.viewmodel
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -13,11 +14,17 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CharacterDetailViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
     private val getCharacterByIdUseCase: GetCharacterByIdUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<CharacterDetailUiState>(CharacterDetailUiState.Loading)
     val uiState: StateFlow<CharacterDetailUiState> = _uiState.asStateFlow()
+
+    init {
+        val characterId = savedStateHandle.get<Int>("characterId") ?: 0
+        loadCharacter(characterId)
+    }
 
     fun loadCharacter(characterId: Int) {
         viewModelScope.launch {

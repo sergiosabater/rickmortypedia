@@ -22,6 +22,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+            //val viewModel: CharactersListViewModel = hiltViewModel()
             val themeViewModel: ThemeViewModel = hiltViewModel()
             val isDarkTheme by themeViewModel.isDarkTheme.collectAsState()
             val systemDarkTheme = isSystemInDarkTheme()
@@ -31,7 +32,7 @@ class MainActivity : ComponentActivity() {
                 Surface(
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    AppNavigation(themeViewModel = themeViewModel)
+                    AppNavigation()
                 }
             }
         }

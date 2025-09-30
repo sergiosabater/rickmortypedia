@@ -1,6 +1,5 @@
 package dev.sergiosabater.rickmortypedia.presentation.ui
 
-
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
@@ -33,34 +32,38 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import dev.sergiosabater.rickmortypedia.R
 import dev.sergiosabater.rickmortypedia.domain.model.Character
+import dev.sergiosabater.rickmortypedia.domain.model.CharacterStatus
 import dev.sergiosabater.rickmortypedia.presentation.ui.component.CharacterListItem
 import dev.sergiosabater.rickmortypedia.presentation.ui.component.CustomSearchBar
+import dev.sergiosabater.rickmortypedia.presentation.ui.component.SpeciesFilter
+import dev.sergiosabater.rickmortypedia.presentation.ui.component.SpeciesFilterBar
+import dev.sergiosabater.rickmortypedia.presentation.ui.theme.RickMortyPediaTheme
 import dev.sergiosabater.rickmortypedia.presentation.viewmodel.CharactersListUiState
-import dev.sergiosabater.rickmortypedia.presentation.viewmodel.ThemeViewModel
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CharactersListScreen(
+    modifier: Modifier = Modifier,
     characters: List<Character>,
     uiState: CharactersListUiState,
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit,
     onCharacterClick: (Character) -> Unit,
-    themeViewModel: ThemeViewModel,
-    modifier: Modifier = Modifier
+    isDarkTheme: Boolean?,
+    onThemeToggle: () -> Unit,
+    selectedSpecies: SpeciesFilter,
+    onSpeciesSelected: (SpeciesFilter) -> Unit
 ) {
-    val isDarkTheme by themeViewModel.isDarkTheme.collectAsState()
 
     Scaffold(
         topBar = {
@@ -69,7 +72,7 @@ fun CharactersListScreen(
                 actions = {
                     ThemeToggleButton(
                         isDarkTheme = isDarkTheme ?: false,
-                        onToggle = { themeViewModel.toggleTheme() }
+                        onToggle = onThemeToggle
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -100,6 +103,7 @@ fun CharactersListScreen(
                         .padding(paddingValues)
                         .background(MaterialTheme.colorScheme.background)
                 ) {
+                    // Logo
                     Image(
                         painter = painterResource(id = R.drawable.ic_logo),
                         contentDescription = "Rick and Morty Logo",
@@ -110,6 +114,7 @@ fun CharactersListScreen(
                             .wrapContentSize(Alignment.Center)
                     )
 
+                    // Search Bar
                     CustomSearchBar(
                         query = searchQuery,
                         onQueryChange = onSearchQueryChange,
@@ -118,8 +123,18 @@ fun CharactersListScreen(
                             .padding(horizontal = 16.dp)
                     )
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
 
+                    // SpeciesFilterBar
+                    SpeciesFilterBar(
+                        selectedSpecies = selectedSpecies,
+                        onSpeciesSelected = onSpeciesSelected,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // Characters list
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(bottom = 16.dp),
@@ -171,7 +186,7 @@ fun CharactersListScreen(
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         Text(
-                            text = "Error al cargar los personajes",
+                            text = "Error loading characters",
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.titleMedium
                         )
@@ -211,6 +226,53 @@ fun ThemeToggleButton(
             contentDescription = if (isDarkTheme) "Change to light mode" else "Change to dark mode",
             tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.rotate(rotation)
+        )
+    }
+}
+
+@Preview
+@Composable
+fun PreviewCharactersListScreen() {
+
+    val sampleCharacters = listOf(
+        Character(
+            id = 1,
+            name = "Rick Sanchez",
+            status = CharacterStatus.ALIVE,
+            species = "Human",
+            type = "Genius",
+            gender = "Male",
+            origin = "Earth (C-137)",
+            location = "Citadel of Ricks",
+            image = "https://rickandmortyapi.com/api/character/avatar/1.jpeg",
+            episodeCount = 51
+        ),
+        Character(
+            id = 1,
+            name = "Rick Sanchez",
+            status = CharacterStatus.ALIVE,
+            species = "Human",
+            type = "Genius",
+            gender = "Male",
+            origin = "Earth (C-137)",
+            location = "Citadel of Ricks",
+            image = "https://rickandmortyapi.com/api/character/avatar/1.jpeg",
+            episodeCount = 51
+        ),
+
+    )
+
+    RickMortyPediaTheme {
+        CharactersListScreen(
+            characters = sampleCharacters,
+            uiState = CharactersListUiState.Success,
+            searchQuery = "",
+            onSearchQueryChange = {},
+            onCharacterClick = {},
+            isDarkTheme = false,
+            onThemeToggle = {},
+            selectedSpecies = SpeciesFilter.ALL,
+            onSpeciesSelected = {}
         )
     }
 }

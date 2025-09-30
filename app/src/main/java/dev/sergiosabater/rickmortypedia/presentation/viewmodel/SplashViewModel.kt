@@ -37,6 +37,7 @@ class SplashViewModel @Inject constructor(
                         _uiState.value = SplashUiState.Error("No characters were found")
                     }
                 }
+
                 else -> {
                     val exception = result.exceptionOrNull()
                     val errorMessage = if (exception is DomainError) {

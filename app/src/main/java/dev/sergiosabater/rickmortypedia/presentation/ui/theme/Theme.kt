@@ -23,7 +23,7 @@ private val LightColorScheme = lightColorScheme(
     // Main
     primary = PortalGreen,
     onPrimary = Color.White,
-    primaryContainer = PortalGreenLight,
+    primaryContainer = PortalGreenDark,
     onPrimaryContainer = TextPrimaryLight,
 
     // Secondary
@@ -57,7 +57,7 @@ private val DarkColorScheme = darkColorScheme(
     // Main - Green Neon Portal
     primary = PortalGreenNeon,
     onPrimary = SpaceBlack,
-    primaryContainer = PortalGreenDark,
+    primaryContainer = PortalGreenNeon,
     onPrimaryContainer = TextPrimaryDark,
 
     // Secondary - Purple Neon

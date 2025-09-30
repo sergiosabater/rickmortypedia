@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -34,9 +34,9 @@ import dev.sergiosabater.rickmortypedia.presentation.ui.theme.RickMortyPediaThem
 
 @Composable
 fun CharacterListItem(
+    modifier: Modifier = Modifier,
     character: Character,
     onClick: (Character) -> Unit,
-    modifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier
@@ -79,7 +79,7 @@ fun CharacterListItem(
             )
 
             Icon(
-                imageVector = Icons.Default.ArrowForward,
+                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                 contentDescription = "See details",
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(20.dp)

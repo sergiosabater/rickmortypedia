@@ -6,7 +6,7 @@ import androidx.compose.ui.graphics.Color
 // === LIGHT THEME - Rick & Morty Colors ===
 
 val PortalGreen = Color(0xFF00D177)
-val PortalGreenDark = Color(0xFF00B86B)
+val PortalGreenDark = Color(0xFF00894B)
 val PortalGreenLight = Color(0xFF80FFC4)
 
 // Space Purple
@@ -26,7 +26,6 @@ val CardLight = Color(0xFFD0F0D0)
 // Text Light
 val TextPrimaryLight = Color(0xFF1A1A1A)
 val TextSecondaryLight = Color(0xFF666666)
-
 
 
 // === DARK THEME - Rick & Morty Colors ===

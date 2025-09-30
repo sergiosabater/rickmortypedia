@@ -22,9 +22,9 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun CustomSearchBar(
+    modifier: Modifier = Modifier,
     query: String,
     onQueryChange: (String) -> Unit,
-    modifier: Modifier = Modifier,
     placeholder: String = "Search for characters..."
 ) {
     OutlinedTextField(

@@ -12,7 +12,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import dev.sergiosabater.rickmortypedia.presentation.viewmodel.CharacterDetailViewModel
 import dev.sergiosabater.rickmortypedia.presentation.viewmodel.CharactersListViewModel
+import dev.sergiosabater.rickmortypedia.presentation.viewmodel.SplashViewModel
 import dev.sergiosabater.rickmortypedia.presentation.viewmodel.ThemeViewModel
 
 sealed class Screen(val route: String) {
@@ -23,7 +25,7 @@ sealed class Screen(val route: String) {
 }
 
 @Composable
-fun AppNavigation(themeViewModel: ThemeViewModel) {
+fun AppNavigation() {
     val navController = rememberNavController()
 
     NavHost(
@@ -31,7 +33,11 @@ fun AppNavigation(themeViewModel: ThemeViewModel) {
         startDestination = Screen.Splash.route
     ) {
         composable(Screen.Splash.route) {
+            val viewModel: SplashViewModel = hiltViewModel()
+            val uiState by viewModel.uiState.collectAsState()
+
             SplashScreen(
+                uiState = uiState,
                 onLoadingComplete = {
                     navController.navigate(Screen.CharacterList.route) {
                         popUpTo(Screen.Splash.route) { inclusive = true }
@@ -47,9 +53,12 @@ fun AppNavigation(themeViewModel: ThemeViewModel) {
 
         composable(Screen.CharacterList.route) {
             val viewModel: CharactersListViewModel = hiltViewModel()
+            val themeViewModel: ThemeViewModel = hiltViewModel()
             val uiState by viewModel.uiState.collectAsState()
             val characters by viewModel.filteredCharacters.collectAsState()
             val searchQuery by viewModel.searchQuery.collectAsState()
+            val isDarkTheme by themeViewModel.isDarkTheme.collectAsState()
+            val selectedSpecies by viewModel.selectedSpecies.collectAsState()
 
             LaunchedEffect(Unit) {
                 viewModel.navigationEvent.collect { characterId ->
@@ -59,11 +68,14 @@ fun AppNavigation(themeViewModel: ThemeViewModel) {
 
             CharactersListScreen(
                 characters = characters,
+                uiState = uiState,
                 searchQuery = searchQuery,
                 onSearchQueryChange = viewModel::onSearchQueryChange,
                 onCharacterClick = viewModel::onCharacterClick,
-                uiState = uiState,
-                themeViewModel = themeViewModel
+                isDarkTheme = isDarkTheme,
+                onThemeToggle = { themeViewModel.toggleTheme() },
+                selectedSpecies = selectedSpecies,
+                onSpeciesSelected = viewModel::onSpeciesFilterChange
             )
         }
 
@@ -90,10 +102,17 @@ fun AppNavigation(themeViewModel: ThemeViewModel) {
                 }
             )
         ) { backStackEntry ->
-            val characterId = backStackEntry.arguments?.getInt("characterId") ?: 0
+            val viewModel: CharacterDetailViewModel = hiltViewModel()
+            val uiState by viewModel.uiState.collectAsState()
+
             CharacterDetailScreen(
-                characterId = characterId,
-                onBackClick = { navController.popBackStack() }
+                uiState = uiState,
+                onBackClick = { navController.popBackStack() },
+                onRetry = {
+                    viewModel.loadCharacter(
+                        backStackEntry.arguments?.getInt("characterId") ?: 0
+                    )
+                }
             )
         }
     }

@@ -112,7 +112,8 @@ class CharacterRepositoryImpl @Inject constructor(
                 } else {
                     val exception = apiResult.exceptionOrNull()
                     Result.failure(
-                        exception as? DomainError ?: DomainError.UnknownError)
+                        exception as? DomainError ?: DomainError.UnknownError
+                    )
                 }
             }
         } catch (e: Exception) {
@@ -274,8 +275,10 @@ class CharacterRepositoryImpl @Inject constructor(
                     throw DomainError.NoCharactersFound
                 }
             }
+
             else -> {
-                val originalError = apiResult.exceptionOrNull() as? DomainError ?: DomainError.SyncFailed
+                val originalError =
+                    apiResult.exceptionOrNull() as? DomainError ?: DomainError.SyncFailed
                 throw originalError
             }
         }

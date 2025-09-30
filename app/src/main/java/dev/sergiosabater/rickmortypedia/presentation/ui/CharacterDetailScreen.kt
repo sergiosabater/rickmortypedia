@@ -21,7 +21,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Favorite
@@ -46,8 +46,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -61,37 +59,32 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import dev.sergiosabater.rickmortypedia.domain.model.Character
 import dev.sergiosabater.rickmortypedia.domain.model.CharacterStatus
 import dev.sergiosabater.rickmortypedia.presentation.ui.theme.RickAndMortyFontFamily
+import dev.sergiosabater.rickmortypedia.presentation.ui.theme.RickMortyPediaTheme
 import dev.sergiosabater.rickmortypedia.presentation.ui.theme.StatusAlive
 import dev.sergiosabater.rickmortypedia.presentation.ui.theme.StatusDead
 import dev.sergiosabater.rickmortypedia.presentation.ui.theme.StatusUnknown
 import dev.sergiosabater.rickmortypedia.presentation.viewmodel.CharacterDetailUiState
-import dev.sergiosabater.rickmortypedia.presentation.viewmodel.CharacterDetailViewModel
 
 @Composable
 fun CharacterDetailScreen(
-    characterId: Int,
-    viewModel: CharacterDetailViewModel = hiltViewModel(),
-    onBackClick: () -> Unit
+    uiState: CharacterDetailUiState,
+    onBackClick: () -> Unit,
+    onRetry: () -> Unit
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-
-    LaunchedEffect(characterId) {
-        viewModel.loadCharacter(characterId)
-    }
 
     Scaffold(
         topBar = {
             CharacterDetailTopBar(
                 characterName = if (uiState is CharacterDetailUiState.Success) {
-                    (uiState as CharacterDetailUiState.Success).character.name
+                    uiState.character.name
                 } else {
                     "Character Details"
                 },
@@ -115,15 +108,15 @@ fun CharacterDetailScreen(
 
             is CharacterDetailUiState.Error -> {
                 ErrorDetailState(
-                    errorMessage = (uiState as CharacterDetailUiState.Error).message,
-                    onRetry = { viewModel.loadCharacter(characterId) },
+                    errorMessage = uiState.message,
+                    onRetry = onRetry,
                     onBackClick = onBackClick,
                     modifier = Modifier.padding(paddingValues)
                 )
             }
 
             is CharacterDetailUiState.Success -> {
-                val character = (uiState as CharacterDetailUiState.Success).character
+                val character = uiState.character
                 CharacterDetailContent(
                     character = character,
                     modifier = Modifier.padding(paddingValues)
@@ -154,7 +147,7 @@ fun CharacterDetailTopBar(
         navigationIcon = {
             IconButton(onClick = onBackClick) {
                 Icon(
-                    imageVector = Icons.Default.ArrowBack,
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back",
                     tint = MaterialTheme.colorScheme.onSurface
                 )
@@ -509,5 +502,31 @@ fun ErrorDetailState(
                 )
             }
         }
+    }
+}
+
+@Preview
+@Composable
+fun PreviewCharacterDetailScreen() {
+
+    val sampleCharacter = Character(
+        id = 1,
+        name = "Rick Sanchez",
+        status = CharacterStatus.ALIVE,
+        species = "Human",
+        type = "Genius",
+        gender = "Male",
+        origin = "Earth (C-137)",
+        location = "Citadel of Ricks",
+        image = "https://rickandmortyapi.com/api/character/avatar/1.jpeg",
+        episodeCount = 51
+    )
+
+    RickMortyPediaTheme {
+        CharacterDetailScreen(
+            uiState = CharacterDetailUiState.Success(character = sampleCharacter),
+            onBackClick = {},
+            onRetry = {}
+        )
     }
 }
